@@ -9,7 +9,7 @@
         handler (create-handler db)]
     {:db db
      :handler handler
-     :server-port 8080
+     :server-port 3000
      :server-join? false}))
 
 (defn start

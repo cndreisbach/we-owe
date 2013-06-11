@@ -2,24 +2,13 @@
   (:require [clojure.pprint :refer [pprint]]
             [compojure.core :refer :all]
             [compojure.route :as route]
-            [compojure.handler :as handler]))
-
-(defn body [obj]
-  (str "Hi world! " (with-out-str (pprint obj))))
-
-(defn index-page [db]
-  (body @db))
-
-(defn key-page [db key]
-  (let [key (keyword key)
-        value (key @db)]
-    (if value
-      (str "Key: " (name key) "\nValue: " (with-out-str (pprint value))))))
+            [compojure.handler :as handler]
+            [us.dreisbach.we-owe.views :as views]))
 
 (defn create-routes [db]
   (routes
-   (GET "/" [] (index-page db))
-   (GET "/:key" [key] (key-page db key))
+   (GET "/" [] (views/index-page db))
+   (GET "/:key" [key] (views/key-page db key))
    (route/not-found "Page not found")))
 
 (defn wrap-plain-text
