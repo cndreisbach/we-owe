@@ -1,12 +1,12 @@
 (ns us.dreisbach.we-owe.system
-  (:require [us.dreisbach.we-owe.handler :refer [app]]
+  (:require [us.dreisbach.we-owe.handler :refer [create-handler]]
             [ring.adapter.jetty :refer [run-jetty]]))
 
 (defn system
   "Returns a new instance of the application."
   []
   (let [db (atom {})
-        handler (partial app db)]
+        handler (create-handler db)]
     {:db db
      :handler handler
      :server-port 8080
