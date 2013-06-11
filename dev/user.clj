@@ -2,10 +2,10 @@
   (:require [alembic.still :refer [distill]]
             [clojure.java.io :as io]
             [clojure.string :as str]
-            [clojure.pprint :refer (pprint)]
+            [clojure.pprint :refer [pprint]]
             [clojure.repl :refer :all]
-            [clojure.test :as test]
-            [clojure.tools.namespace.repl :refer (refresh refresh-all)]
+            [expectations :refer [run-tests run-all-tests]]
+            [clojure.tools.namespace.repl :refer [refresh refresh-all]]
             [us.dreisbach.we-owe.system :as system]))
 
 (def system nil)
