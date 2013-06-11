@@ -1,12 +1,8 @@
-(ns us.dreisbach.we-owe.handler)
+(ns us.dreisbach.we-owe.handler
+  (:require [clojure.pprint :refer [pprint]]))
 
-(defn body [count]
-  (str "Hi world! " count))
+(defn body [obj]
+  (str "Hi world! " (with-out-str (pprint obj))))
 
-(defn app [db]
-  (fn [req]
-    {:body (body (count @db)) :headers {} :status 200}))
-
-(comment
-  (handler {:uri "/"})
-  )
+(defn app [db req]
+  {:body (body @db) :headers {} :status 200})
