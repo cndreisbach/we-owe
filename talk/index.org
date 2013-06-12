@@ -89,7 +89,7 @@ yet, but are awesome.
 
 * Future Approaches                                                   :slide:
 ** Pedestal                                                           :slide:
-** Wigwam and Hoplon                                                  :slide:
+** Hoplon                                                             :slide:
 * End
 
 #+PROPERTY: tangle yes
