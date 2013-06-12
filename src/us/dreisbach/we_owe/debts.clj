@@ -43,7 +43,7 @@
 (defn balances
   "Take a vector of lending maps and produce a map of balances. A positive balance is a credit, while a negative balance is a debt. All balances must total zero."
   [debts]
-  {:post [(zero? (reduce (fn [x y] (+ x y)) (map second %)))]}
+  {:post [(zero? (reduce (fn [x y] (+ x y)) 0 (map second %)))]}
   (let [debts (simplify debts)]
     (reduce (fn [tot [[borrower lender] amount]]
               (-> tot
