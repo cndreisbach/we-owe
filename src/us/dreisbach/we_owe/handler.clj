@@ -8,7 +8,7 @@
 (defn create-routes [db]
   (routes
    (GET "/" [] (views/index-page db))
-   (GET "/:key" [key] (views/key-page db key))
+   (GET "/:person" [person] (views/person-page db person))
    (route/not-found "Page not found")))
 
 (defn wrap-plain-text

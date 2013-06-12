@@ -6,7 +6,8 @@
             [clojure.repl :refer :all]
             [expectations :refer [run-tests run-all-tests]]
             [clojure.tools.namespace.repl :refer [refresh refresh-all]]
-            [us.dreisbach.we-owe.system :as system]))
+            [us.dreisbach.we-owe.system :as system]
+            [us.dreisbach.we-owe.debts :as debts]))
 
 (def system nil)
 
@@ -36,3 +37,11 @@
 (defn reset []
   (stop)
   (refresh :after 'user/go))
+
+(comment
+  (def debt {:from "clinton" :to "pete" :amount 3.50})
+  (def debt {:from "clinton" :to "diego" :amount 2.00})
+  (def debt {:from "pete" :to "clinton" :amount 1.25})
+  (swap!
+   (:db system)
+   update-in [:debts] debts/add-debt debt))

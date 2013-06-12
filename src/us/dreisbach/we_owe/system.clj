@@ -5,7 +5,7 @@
 (defn system
   "Returns a new instance of the application."
   []
-  (let [db (atom {})
+  (let [db (atom {:debts []})
         handler (create-handler db)]
     {:db db
      :handler handler
