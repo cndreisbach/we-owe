@@ -1,6 +1,9 @@
 (ns us.dreisbach.we-owe.debts
   (:require [clojure.test :refer :all]))
 
+(defn valid-debt? [debt]
+  (not-any? nil? (map (juxt :from :to :amount) debt)))
+
 (defn- transform-debts-to-vecs
   [debts]
   (map #(vector [(:to %) (:from %)] (:amount %)) debts))
@@ -25,9 +28,7 @@
 
 (defn- check-debt-validity
   [f debts]
-  {:pre [(every? identity
-                 (map (comp #(not-any? nil? %)
-                            (juxt :from :to :amount)) debts))]}
+  {:pre [(every? identity (map valid-debt? debts))]}
   (f debts))
 
 (defn simplify
@@ -55,5 +56,5 @@
 
 (defn add-debt
   [current-debts debt]
-  {:pre [(not-any? nil? (map (juxt :from :to :amount) debt))]}
+  {:pre [(valid-debt? debt)]}
   (conj current-debts debt))
