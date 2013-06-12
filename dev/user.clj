@@ -39,9 +39,11 @@
   (refresh :after 'user/go))
 
 (comment
-  (def debt {:from "clinton" :to "pete" :amount 3.50})
-  (def debt {:from "clinton" :to "diego" :amount 2.00})
-  (def debt {:from "pete" :to "clinton" :amount 1.25})
+  (def debts [{:from "clinton" :to "pete" :amount 3.50}
+              {:from "clinton" :to "diego" :amount 2.00}
+              {:from "pete" :to "clinton" :amount 1.25}
+              {:from "jill" :to "pete" :amount 10.00}])
   (swap!
    (:db system)
-   update-in [:debts] debts/add-debt debt))
+   assoc :debts debts)
+  )
