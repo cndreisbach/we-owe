@@ -9,6 +9,7 @@
   (routes
    (GET "/" [] (views/index-page db))
    (GET "/:person" [person] (views/person-page db person))
+   (route/resources "/")
    (route/not-found "Page not found")))
 
 (defn create-handler [db]
