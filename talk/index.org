@@ -63,6 +63,7 @@ Cons: instead of knowing 4 languages + a framework, now you get to learn a lot o
 - Hiccup
 - Garden
 - ClojureScript
+- necessary-evil (https://github.com/brehaut/necessary-evil)
 - Liberator
 - Friend
 - Korma
@@ -80,6 +81,7 @@ yet, but are awesome.
 ** HTML generation                                                    :slide:
 ** JSON generation                                                    :slide:
 ** REST APIs                                                          :slide:
+** XML-RPC (necessary-evil)                                           :slide:
 ** CSS                                                                :slide:
 ** JavaScript                                                         :slide:
    
@@ -88,8 +90,8 @@ yet, but are awesome.
 ** Rolling your own framework                                         :slide:
 
 * Future Approaches                                                   :slide:
-** Pedestal                                                           :slide:
-** Hoplon                                                             :slide:
+** Hoplon and XML-RPC                                                 :slide:
+** Pedestal?                                                          :slide:
 * End
 
 #+PROPERTY: tangle yes
