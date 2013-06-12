@@ -43,7 +43,16 @@
                             (= owes person)))
                   (map (fn [[[_ owed] amount]] (vector owed amount))))]
     (layout
-     [:pre
-      (str "You owe:\n" (pstr owes)
-           "\n\nYou are owed:\n" (pstr owed))])))
+     [:h1 "You owe:"]
+     [:ul
+      (if (zero? (count owes))
+        [:li "Nothing!"]
+        (for [[person amount] owes]
+          [:li (str person ": $" amount)]))]
+     [:h1 "You are owed:"]
+     [:ul
+      (if (zero? (count owed))
+        [:li "Nothing!"]
+        (for [[person amount] owed]
+          [:li (str person ": $" amount)]))])))
 
