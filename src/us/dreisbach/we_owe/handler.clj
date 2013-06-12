@@ -8,6 +8,8 @@
 (defn create-routes [db]
   (routes
    (GET "/" [] (views/index-page db))
+   (GET "/add-debt" [] (views/add-debt-page))
+   (POST "/add-debt" [from to amount] (views/add-debt-post db {:from from :to to :amount amount}))
    (GET "/:person" [person] (views/person-page db person))
    (route/resources "/")
    (route/not-found "Page not found")))
