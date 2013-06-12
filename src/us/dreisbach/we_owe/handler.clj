@@ -11,12 +11,6 @@
    (GET "/:person" [person] (views/person-page db person))
    (route/not-found "Page not found")))
 
-(defn wrap-plain-text
-  [handler]
-  (fn [req]
-    (assoc-in (handler req) [:headers "Content-Type"] "text/plain;charset=UTF-8")))
-
 (defn create-handler [db]
   (-> (create-routes db)
-      handler/site
-      wrap-plain-text))
+      handler/site))
