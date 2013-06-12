@@ -1,9 +1,11 @@
 (ns us.dreisbach.we-owe.views
   (:require [clojure.pprint :refer [pprint]]
-            [us.dreisbach.we-owe.debts :refer [simplify balances]]
+            [us.dreisbach.we-owe.debts :refer [valid-debt? simplify balances]]
+            [ring.util.response :refer [redirect-after-post]]
             [hiccup.core :refer :all]
             [hiccup.page :refer :all]
-            [hiccup.element :refer :all]))
+            [hiccup.element :refer :all]
+            [hiccup.form :as form]))
 
 (defn- pstr [obj]
   (with-out-str (pprint obj)))
@@ -30,7 +32,9 @@
      [:h1 "Balances"]
      [:ul
       (for [[person amount] (balances debts)]
-        [:li (str person ": $" amount)])])))
+        [:li (str person ": $" amount)])]
+     [:div
+      [:a {:href "/add-debt"} "Add a debt"]])))
 
 (defn person-page [db person]
   (let [debts (simplify (:debts @db))
@@ -56,3 +60,26 @@
         (for [[person amount] owed]
           [:li (str person ": $" amount)]))])))
 
+(defn- horizontal-input [field label]
+  (let [field (name field)
+        field-id (str field "-field")]
+    [:div.control-group
+     [:label.control-label {:for field-id} label]
+     [:div.controls
+      [:input {:id field-id :type "text" :name field}]]]))
+
+(defn add-debt-page []
+  (layout
+   [:h1 "Add a debt"]
+   (form/form-to {:class "form-horizontal"} [:post "/add-debt"]
+                 (horizontal-input :from "Lender")
+                 (horizontal-input :to "Borrower")
+                 (horizontal-input :amount "Amount")
+                 [:div.control-group
+                  [:div.controls [:button.btn {:type "submit"} "Add a debt"]]])))
+
+(defn add-debt-post [db debt]
+  {:pre [(valid-debt? debt)]}
+  (let [debt (update-in debt [:amount] #(Float/parseFloat %))]
+    (swap! db update-in [:debts] conj debt))
+  (redirect-after-post "/"))
