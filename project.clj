@@ -8,5 +8,6 @@
                  [compojure "1.1.5"]]
   :profiles {:dev {:source-paths ["dev"]
                    :dependencies [[org.clojure/tools.namespace "0.2.3"]
-                                  [org.clojure/java.classpath "0.2.1"]
+                                  [org.clojure/java.classpath "0.2.0"]
+                                  [alembic "0.1.0"]
                                   [expectations "1.4.45"]]}})
