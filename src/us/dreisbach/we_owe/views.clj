@@ -11,9 +11,14 @@
 (defn- layout
   [& content]
   (html
-   (html5 [:head]
+   (html5 [:head
+           [:meta {:charset "utf-8"}]
+           [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
+           (include-css "/css/bootstrap.min.css")]
           [:body
-           content])))
+           [:div {:class "container"}
+            content]
+           (include-js "/js/bootstrap.min.js")])))
 
 (defn index-page [db]
   (let [debts (:debts @db)]
