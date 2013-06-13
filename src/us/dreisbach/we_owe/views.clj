@@ -5,7 +5,8 @@
             [hiccup.core :refer :all]
             [hiccup.page :refer :all]
             [hiccup.element :refer :all]
-            [hiccup.form :as form]))
+            [hiccup.form :as form]
+            [validateur.validation :refer :all]))
 
 (defn- pstr [obj]
   (with-out-str (pprint obj)))
@@ -16,9 +17,13 @@
    (html5 [:head
            [:meta {:charset "utf-8"}]
            [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
-           (include-css "/css/bootstrap.min.css")]
+           (include-css "/css/bootstrap.min.css")
+           [:style {:type "text/css"} "body { margin-top: 30px; }"]]
           [:body
-           [:div {:class "container"}
+           [:div.container
+            [:div.navbar
+             [:div.navbar-inner
+              [:a.brand {:href "/"} "WeOwe"]]]
             content]
            (include-js "/js/bootstrap.min.js")])))
 
@@ -34,7 +39,7 @@
       (for [[person amount] (balances debts)]
         [:li (str person ": $" amount)])]
      [:div
-      [:a {:href "/add-debt"} "Add a debt"]])))
+      [:a.btn.btn-primary {:href "/add-debt"} [:i.icon-plus.icon-white] " Add a debt"]])))
 
 (defn person-page [db person]
   (let [debts (simplify (:debts @db))
@@ -76,10 +81,17 @@
                  (horizontal-input :to "Borrower")
                  (horizontal-input :amount "Amount")
                  [:div.control-group
-                  [:div.controls [:button.btn {:type "submit"} "Add a debt"]]])))
+                  [:div.controls [:button.btn.btn-primary {:type "submit"} "Add a debt"]]])))
 
 (defn add-debt-post [db debt]
-  {:pre [(valid-debt? debt)]}
-  (let [debt (update-in debt [:amount] #(Float/parseFloat %))]
-    (swap! db update-in [:debts] conj debt))
-  (redirect-after-post "/"))
+  (let [debt-validator (validation-set
+                        (presence-of :from)
+                        (presence-of :to)
+                        (presence-of :amount)
+                        (format-of :amount :format #"^\d+$" :message "must be a number"))]
+    (if (valid? debt-validator debt)
+      (let [debt (update-in debt [:amount] #(Float/parseFloat %))]
+        (swap! db update-in [:debts] conj debt)
+        (redirect-after-post "/"))
+      (let [errors (debt-validator debt)]
+        (layout (pstr errors))))))

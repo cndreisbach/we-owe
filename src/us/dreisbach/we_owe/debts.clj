@@ -1,5 +1,5 @@
 (ns us.dreisbach.we-owe.debts
-  (:require [clojure.test :refer :all]))
+  (:require [validateur.validation :refer :all]))
 
 (defn valid-debt? [debt]
   (not-any? nil? (map (juxt :from :to :amount) debt)))
