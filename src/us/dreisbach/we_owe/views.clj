@@ -65,23 +65,36 @@
         (for [[person amount] owed]
           [:li (str person ": $" amount)]))])))
 
-(defn- horizontal-input [field label]
+(defn- horizontal-input [field label value errors]
   (let [field (name field)
         field-id (str field "-field")]
-    [:div.control-group
+    [:div {:class (if (seq errors) "control-group error" "control-group")}
      [:label.control-label {:for field-id} label]
      [:div.controls
-      [:input {:id field-id :type "text" :name field}]]]))
+      [:input {:id field-id :type "text" :name field :value value}]
+      (if (seq errors)
+        (for [error errors]
+          [:span.help-block error]))]]))
 
-(defn add-debt-page []
-  (layout
-   [:h1 "Add a debt"]
-   (form/form-to {:class "form-horizontal"} [:post "/add-debt"]
-                 (horizontal-input :from "Lender")
-                 (horizontal-input :to "Borrower")
-                 (horizontal-input :amount "Amount")
-                 [:div.control-group
-                  [:div.controls [:button.btn.btn-primary {:type "submit"} "Add a debt"]]])))
+(defn- output-form
+  ([fields] (output-form fields {} {}))
+  ([fields values errors]
+     (for [[field label] fields]
+       (horizontal-input field label (field values) (field errors)))))
+
+(defn add-debt-page
+  ([] (add-debt-page {} {}))
+  ([debt errors]
+     (layout
+      [:h1 "Add a debt"]
+      (form/form-to {:class "form-horizontal"} [:post "/add-debt"]
+                    (output-form [[:from "Lender"]
+                                  [:to "Borrower"]
+                                  [:amount "Amount"]]
+                                 debt
+                                 errors)
+                    [:div.control-group
+                     [:div.controls [:button.btn.btn-primary {:type "submit"} "Add a debt"]]]))))
 
 (defn add-debt-post [db debt]
   (let [debt-validator (validation-set
@@ -94,4 +107,4 @@
         (swap! db update-in [:debts] conj debt)
         (redirect-after-post "/"))
       (let [errors (debt-validator debt)]
-        (layout (pstr errors))))))
+        (add-debt-page debt errors)))))
