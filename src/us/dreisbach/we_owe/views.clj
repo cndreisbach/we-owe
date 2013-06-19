@@ -1,15 +1,24 @@
 (ns us.dreisbach.we-owe.views
   (:require [clojure.pprint :refer [pprint]]
-            [us.dreisbach.we-owe.debts :refer [valid-debt? simplify balances]]
+            [clojure.walk :refer [keywordize-keys]]
+            [us.dreisbach.we-owe.debts :as debts :refer [valid-debt?]]
             [ring.util.response :refer [redirect-after-post]]
             [hiccup.core :refer :all]
             [hiccup.page :refer :all]
             [hiccup.element :refer :all]
             [hiccup.form :as form]
-            [validateur.validation :refer :all]))
+            [validateur.validation :refer :all]
+            [cheshire.core :as json]))
 
 (defn- pstr [obj]
   (with-out-str (pprint obj)))
+
+(defn json-response
+  ([obj] (json-response 200 obj))
+  ([status obj]
+     {:status status
+      :headers {"Content-Type" "application/json; charset=UTF-8"}
+      :body (json/generate-string obj)}))
 
 (defn- layout
   [& content]
@@ -32,17 +41,25 @@
     (layout
      [:h1 "Debts"]
      [:ul
-      (for [[[debtor lender] amount] (simplify debts)]
+      (for [[[debtor lender] amount] (debts/simplify debts)]
         [:li (str debtor " owes " lender " $" amount ".")])]
      [:h1 "Balances"]
      [:ul
-      (for [[person amount] (balances debts)]
+      (for [[person amount] (debts/balances debts)]
         [:li (str person ": $" amount)])]
      [:div
       [:a.btn.btn-primary {:href "/add-debt"} [:i.icon-plus.icon-white] " Add a debt"]])))
 
+(defn index-json [db]
+  (let [original-debts (:debts @db)
+        debts (->> (debts/simplify original-debts)
+                   (map (fn [[[to from] amount]]
+                          {:lender from :debtor to :amount amount})))        
+        balances (debts/balances original-debts)]
+    (json-response {:debts debts :balances balances})))
+
 (defn person-page [db person]
-  (let [debts (simplify (:debts @db))
+  (let [debts (debts/simplify (:debts @db))
         owed (->> debts
                   (filter (fn [[[_ owed] amount]]
                             (= owed person)))
@@ -64,6 +81,16 @@
         [:li "Nothing!"]
         (for [[person amount] owed]
           [:li (str person ": $" amount)]))])))
+
+(defn person-json [db person]
+  (let [debts (debts/simplify (:debts @db))
+        owed (->> debts
+                  (filter (fn [[[_ owed] amount]] (= owed person)))
+                  (map (fn [[[owes _] amount]] {:person owes :amount amount})))
+        owes (->> debts
+                  (filter (fn [[[owes _] amount]] (= owes person)))
+                  (map (fn [[[_ owed] amount]] {:person owed :amount amount})))]
+    (json-response {:debts owes :loans owed})))
 
 (defn- horizontal-input [field label value errors]
   (let [field (name field)
@@ -96,6 +123,7 @@
                     [:div.control-group
                      [:div.controls [:button.btn.btn-primary {:type "submit"} "Add a debt"]]]))))
 
+
 (defn add-debt-post [db debt]
   (let [debt-validator (validation-set
                         (presence-of :from)
@@ -108,3 +136,17 @@
         (redirect-after-post "/"))
       (let [errors (debt-validator debt)]
         (add-debt-page debt errors)))))
+
+(defn add-debt-json [db body]
+  (let [debt (-> body
+                 json/parse-string
+                 keywordize-keys)
+        debt-validator (validation-set
+                        (presence-of :from)
+                        (presence-of :to)
+                        (presence-of :amount)
+                        (numericality-of :amount))]
+    (if (valid? debt-validator debt)
+      (do (swap! db update-in [:debts] conj debt)
+          (json-response {:debt debt :debts (:debts @db) :ok true}))
+      (json-response 400 {:ok false :errors (debt-validator debt)}))))
