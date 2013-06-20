@@ -6,6 +6,7 @@
             [clojure.repl :refer :all]
             [expectations :refer [run-tests run-all-tests]]
             [clojure.tools.namespace.repl :refer [refresh refresh-all]]
+            [ring.mock.request :refer [request]]
             [us.dreisbach.we-owe.system :as system]
             [us.dreisbach.we-owe.debts :as debts]))
 
