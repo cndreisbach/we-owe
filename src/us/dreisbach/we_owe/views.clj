@@ -1,6 +1,7 @@
 (ns us.dreisbach.we-owe.views
   (:require [clojure.pprint :refer [pprint]]
             [clojure.walk :refer [keywordize-keys]]
+            [clojure.java.io :as io]            
             [us.dreisbach.we-owe.debts :as debts :refer [valid-debt?]]
             [ring.util.response :refer [redirect-after-post]]
             [hiccup.core :refer :all]
@@ -8,7 +9,8 @@
             [hiccup.element :refer :all]
             [hiccup.form :as form]
             [validateur.validation :refer :all]
-            [cheshire.core :as json]))
+            [cheshire.core :as json]
+            [garden.core :refer [css]]))
 
 (defn- pstr [obj]
   (with-out-str (pprint obj)))
@@ -27,6 +29,7 @@
            [:meta {:charset "utf-8"}]
            [:meta {:name "viewport" :content "width=device-width, initial-scale=1.0"}]
            (include-css "/css/bootstrap.min.css")
+           (include-css "/css/style.css")
            [:style {:type "text/css"} "body { margin-top: 30px; }"]]
           [:body
            [:div.container
@@ -148,5 +151,14 @@
                         (numericality-of :amount))]
     (if (valid? debt-validator debt)
       (do (swap! db update-in [:debts] conj debt)
-          (json-response {:debt debt :debts (:debts @db) :ok true}))
+          (json-response 201 {:debt debt :debts (:debts @db) :ok true}))
       (json-response 400 {:ok false :errors (debt-validator debt)}))))
+
+(defn css-page [path]
+  (when-let [garden-url (io/resource (str "public/" path ".garden"))]
+    (let [garden-data (load-file (.getPath garden-url))]
+      {:status 200
+       :headers {"Content-Type" "text/css"}
+       :body (css garden-data)})))
+
+(def css-page-memo (memoize css-page))

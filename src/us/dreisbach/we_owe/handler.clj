@@ -16,6 +16,7 @@
    (POST "/add-debt.json" {body :body} (views/add-debt-json db (slurp body)))   
    (GET "/:person.json" [person] (views/person-json db person))
    (GET "/:person" [person] (views/person-page db person))
+   (GET "/*.css" {{path :*} :route-params} (views/css-page path))   
    (route/resources "/")
    (route/not-found "Page not found")))
 
