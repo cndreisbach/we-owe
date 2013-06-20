@@ -3,12 +3,12 @@
             [compojure.core :refer :all]
             [compojure.route :as route]
             [compojure.handler :as handler]
-            [noir.response :as response]
+            [ring.util.response :as response]
             [us.dreisbach.we-owe.views :as views]))
 
 (defn create-routes [db]
   (routes
-   (GET "/" [] (fn [_] {:status 301 :headers {"Location" "/debts"}}))
+   (GET "/" [] (response/redirect "/debts"))
    (GET "/debts" [] (views/index-page db))
    (GET "/debts.json" [] (views/index-json db))
    (GET "/add-debt" [] (views/add-debt-page))
