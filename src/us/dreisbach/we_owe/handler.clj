@@ -3,12 +3,16 @@
             [compojure.core :refer :all]
             [compojure.route :as route]
             [compojure.handler :as handler]
-            [ring.util.response :as response]
+            [noir.response :as response]
+            [noir.util.middleware :refer [app-handler]]
             [us.dreisbach.we-owe.views :as views]))
 
 (defn create-routes [db]
   (routes
-   (GET "/" [] (response/redirect "/debts"))
+   (GET "/" [] (response/redirect "/debts" :permanent))
+   (GET "/login" [] (views/login-page))
+   (POST "/login" [username password] (views/login-post db {:username username :password password}))
+   (ANY "/logout" [] (views/logout-page))
    (GET "/debts" [] (views/index-page db))
    (GET "/debts.json" [] (views/index-json db))
    (GET "/add-debt" [] (views/add-debt-page))
@@ -21,5 +25,4 @@
    (route/not-found "Page not found")))
 
 (defn create-handler [db]
-  (-> (create-routes db)
-      handler/site))
+  (app-handler [(create-routes db)]))

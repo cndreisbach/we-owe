@@ -31,6 +31,13 @@
   {:pre [(every? identity (map valid-debt? debts))]}
   (f debts))
 
+(defn all-users
+  "Take a vector of lending maps and collect all users in the vector into a set."
+  [debts]
+  (-> (map (juxt :to :from) debts)
+      flatten
+      set))
+
 (defn simplify
   "Take a vector of lending maps {:to a :from b :amount x :datetime dt} and simplify them to a vector of maps showing who owes who {:person a :owes b :amount x}."
   [debts]
