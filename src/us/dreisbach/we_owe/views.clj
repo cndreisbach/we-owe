@@ -18,13 +18,18 @@
   [obj]
   (with-out-str (pprint obj)))
 
+(defn- user-link
+  [user]
+  [:a {:href (str "/user/" user)} user])
+
 (defn- login-nav
   []
   (let [user (session/get :user)]
     (if user
       [:ul.nav.pull-right
        [:li.divider-vertical]                   
-       [:li.navbar-text (str "Logged in as " user)]
+       [:li [:a {:href (str "/user/" user)}
+             (str "Logged in as " user)]]
        [:li.divider-vertical]
        [:li [:a {:href "/logout"} "Logout"]]]
       [:ul.nav.pull-right
@@ -56,11 +61,11 @@
      [:h1 "Debts"]
      [:ul
       (for [[[debtor lender] amount] (debts/simplify debts)]
-        [:li (str debtor " owes " lender " $" amount ".")])]
+        [:li (user-link debtor) (str " owes " lender " $" amount ".")])]
      [:h1 "Balances"]
      [:ul
       (for [[person amount] (debts/balances debts)]
-        [:li (str person ": $" amount)])]
+        [:li (user-link person) (str ": $" amount)])]
      [:div
       [:a.btn.btn-primary {:href "/add-debt"} [:i.icon-plus.icon-white] " Add a debt"]])))
 
@@ -90,13 +95,13 @@
       (if (zero? (count owes))
         [:li "Nothing!"]
         (for [[person amount] owes]
-          [:li (str person ": $" amount)]))]
+          [:li (user-link person) (str ": $" amount)]))]
      [:h1 "You are owed:"]
      [:ul
       (if (zero? (count owed))
         [:li "Nothing!"]
         (for [[person amount] owed]
-          [:li (str person ": $" amount)]))])))
+          [:li (user-link person) (str ": $" amount)]))])))
 
 (defn person-json
   [db person]
