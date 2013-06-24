@@ -54,28 +54,25 @@
             content]
            (include-js "/js/bootstrap.min.js")])))
 
-(defn index-page
-  [db]
-  (let [debts (:debts @db)]
-    (layout
-     [:h1 "Debts"]
-     [:ul
-      (for [[[debtor lender] amount] (debts/simplify debts)]
-        [:li (user-link debtor) (str " owes " lender " $" amount ".")])]
-     [:h1 "Balances"]
-     [:ul
-      (for [[person amount] (debts/balances debts)]
-        [:li (user-link person) (str ": $" amount)])]
-     [:div
-      [:a.btn.btn-primary {:href "/add-debt"} [:i.icon-plus.icon-white] " Add a debt"]])))
+(defmulti debts :format)
 
-(defn index-json
-  [db]
-  (let [original-debts (:debts @db)
-        debts (->> (debts/simplify original-debts)
-                   (map (fn [[[to from] amount]]
-                          {:lender from :debtor to :amount amount})))        
-        balances (debts/balances original-debts)]
+(defmethod debts "text/html" [{:keys [debts balances]}]
+  (layout
+   [:h1 "Debts"]
+   [:ul
+    (for [[[debtor lender] amount] debts]
+      [:li (user-link debtor) (str " owes " lender " $" amount ".")])]
+   [:h1 "Balances"]
+   [:ul
+    (for [[person amount] balances]
+      [:li (user-link person) (str ": $" amount)])]
+   [:div
+    [:a.btn.btn-primary {:href "/debts/add"} [:i.icon-plus.icon-white] " Add a debt"]]))
+
+(defmethod debts "application/json" [{:keys [debts balances]}]
+  (let [debts (map (fn [[[to from] amount]]
+                     {:lender from :debtor to :amount amount})
+                   debts)]
     (response/json {:debts debts :balances balances})))
 
 (defn person-page
@@ -138,7 +135,7 @@
   ([debt errors]
      (layout
       [:h1 "Add a debt"]
-      (form/form-to {:class "form-horizontal"} [:post "/add-debt"]
+      (form/form-to {:class "form-horizontal"} [:post "/debts/add"]
                     (output-form [[:from "Lender"]
                                   [:to "Borrower"]
                                   [:amount "Amount"]]
@@ -147,20 +144,6 @@
                     [:div.control-group
                      [:div.controls
                       [:button.btn.btn-primary {:type "submit"} "Add a debt"]]]))))
-
-(defn add-debt-post
-  [db debt]
-  (let [debt-validator (validation-set
-                        (presence-of :from)
-                        (presence-of :to)
-                        (presence-of :amount)
-                        (format-of :amount :format #"^\d+$" :message "must be a number"))]
-    (if (valid? debt-validator debt)
-      (let [debt (update-in debt [:amount] #(Float/parseFloat %))]
-        (swap! db update-in [:debts] conj debt)
-        (redirect-after-post "/"))
-      (let [errors (debt-validator debt)]
-        (add-debt-page debt errors)))))
 
 (defn add-debt-json
   [db body]

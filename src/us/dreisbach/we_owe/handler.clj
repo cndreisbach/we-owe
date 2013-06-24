@@ -7,7 +7,8 @@
             [noir.util.route :refer [restricted]]
             [noir.util.middleware :refer [app-handler]]
             [noir.session :as session]
-            [us.dreisbach.we-owe.views :as views]))
+            [us.dreisbach.we-owe.views :as views]
+            [us.dreisbach.we-owe.resources :as resources]))
 
 (defn- logged-in? [request]
   (session/get :user))
@@ -16,12 +17,9 @@
   (routes
    (GET "/" [] (response/redirect "/debts" :permanent))
 
-   (GET "/debts" [] (views/index-page db))
-   (GET "/debts.json" [] (views/index-json db))
+   (GET "/debts" [] resources/debts)
+   (ANY "/debts/add" [] (restricted resources/add-debt))
 
-   (GET "/add-debt" [] (restricted (views/add-debt-page)))
-   (POST "/add-debt" [from to amount]
-         (restricted (views/add-debt-post db {:from from :to to :amount amount})))
    (POST "/add-debt.json" {body :body} (views/add-debt-json db (slurp body)))   
 
    (GET "/user/:person.json" [person] (restricted (views/person-json db person)))
@@ -37,8 +35,15 @@
    (route/resources "/")
    (route/not-found "Page not found")))
 
+(defn wrap-db [db handler]
+  (fn [{:as request}]
+    (-> request
+        (assoc :db db)
+        handler)))
+
 (defn create-handler [db]
-  (app-handler
-   [(create-routes db)]
-   :access-rules [{:redirect "/login"
-                   :rules [logged-in?]}]))
+  (wrap-db db
+   (app-handler
+    [(create-routes db)]
+    :access-rules [{:redirect "/login"
+                    :rules [logged-in?]}])))
