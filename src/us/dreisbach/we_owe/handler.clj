@@ -1,5 +1,8 @@
 (ns us.dreisbach.we-owe.handler
   (:require [clojure.pprint :refer [pprint]]
+            [ring.middleware
+             [stacktrace :refer [wrap-stacktrace]]
+             [mime-extensions :refer [wrap-convert-extension-to-accept-header]]]
             [compojure.core :refer :all]
             [compojure.route :as route]
             [compojure.handler :as handler]
@@ -16,34 +19,35 @@
 (defn create-routes [db]
   (routes
    (GET "/" [] (response/redirect "/debts" :permanent))
-
    (GET "/debts" [] resources/debts)
+
    (ANY "/debts/add" [] (restricted resources/add-debt))
+   (POST "/debts/add.json" {body :body} (views/add-debt-json db (slurp body)))
 
-   (POST "/add-debt.json" {body :body} (views/add-debt-json db (slurp body)))   
+   (GET "/user/:user.json" [] (restricted resources/user))
+   (GET "/user/:user" [] (restricted resources/user))
 
-   (GET "/user/:person.json" [person] (restricted (views/person-json db person)))
-   (GET "/user/:person" [person] (restricted (views/person-page db person)))
-   
    (GET "/login" [] (views/login-page))
    (POST "/login" [username password]
          (views/login-post db {:username username :password password}))
    (ANY "/logout" [] (views/logout-page))
 
-   (GET "/*.css" {{path :*} :route-params} (views/css-page path))   
-   
+   (GET "/*.css" {{path :*} :route-params} (views/css-page path))
+
    (route/resources "/")
    (route/not-found "Page not found")))
 
-(defn wrap-db [db handler]
+(defn wrap-db [handler db]
   (fn [{:as request}]
     (-> request
         (assoc :db db)
         handler)))
 
 (defn create-handler [db]
-  (wrap-db db
-   (app-handler
-    [(create-routes db)]
-    :access-rules [{:redirect "/login"
-                    :rules [logged-in?]}])))
+  (-> (app-handler
+       [(create-routes db)]
+       :access-rules [{:redirect "/login"
+                       :rules [logged-in?]}])
+      (wrap-db db)
+      (wrap-convert-extension-to-accept-header)
+      (wrap-stacktrace)))

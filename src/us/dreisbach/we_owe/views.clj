@@ -56,7 +56,8 @@
 
 (defmulti debts :format)
 
-(defmethod debts "text/html" [{:keys [debts balances]}]
+(defmethod debts "text/html"
+  [{:keys [debts balances]}]
   (layout
    [:h1 "Debts"]
    [:ul
@@ -69,47 +70,34 @@
    [:div
     [:a.btn.btn-primary {:href "/debts/add"} [:i.icon-plus.icon-white] " Add a debt"]]))
 
-(defmethod debts "application/json" [{:keys [debts balances]}]
+(defmethod debts "application/json"
+  [{:keys [debts balances]}]
   (let [debts (map (fn [[[to from] amount]]
                      {:lender from :debtor to :amount amount})
                    debts)]
-    (response/json {:debts debts :balances balances})))
+    {:debts debts :balances balances}))
 
-(defn person-page
-  [db person]
-  (let [debts (debts/simplify (:debts @db))
-        owed (->> debts
-                  (filter (fn [[[_ owed] amount]]
-                            (= owed person)))
-                  (map (fn [[[owes _] amount]] (vector owes amount))))
-        owes (->> debts
-                  (filter (fn [[[owes _] amount]]
-                            (= owes person)))
-                  (map (fn [[[_ owed] amount]] (vector owed amount))))]
-    (layout
-     [:h1 "You owe:"]
-     [:ul
-      (if (zero? (count owes))
-        [:li "Nothing!"]
-        (for [[person amount] owes]
-          [:li (user-link person) (str ": $" amount)]))]
-     [:h1 "You are owed:"]
-     [:ul
-      (if (zero? (count owed))
-        [:li "Nothing!"]
-        (for [[person amount] owed]
-          [:li (user-link person) (str ": $" amount)]))])))
+(defmulti user :format)
 
-(defn person-json
-  [db person]
-  (let [debts (debts/simplify (:debts @db))
-        owed (->> debts
-                  (filter (fn [[[_ owed] amount]] (= owed person)))
-                  (map (fn [[[owes _] amount]] {:person owes :amount amount})))
-        owes (->> debts
-                  (filter (fn [[[owes _] amount]] (= owes person)))
-                  (map (fn [[[_ owed] amount]] {:person owed :amount amount})))]
-    (response/json {:debts owes :loans owed})))
+(defmethod user "text/html"
+  [{:keys [debts owed owes user]}]
+  (layout
+   [:h1 (str user " owes:")]
+   [:ul
+    (if (zero? (count owes))
+      [:li "Nothing!"]
+      (for [[user amount] owes]
+        [:li (user-link user) (str ": $" amount)]))]
+   [:h1 (str user " is owed:")]
+   [:ul
+    (if (zero? (count owed))
+      [:li "Nothing!"]
+      (for [[user amount] owed]
+        [:li (user-link user) (str ": $" amount)]))]))
+
+(defmethod user "application/json"
+  [{:keys [debts owed owes user]}]
+  {:debts owes :loans owed})
 
 (defn- horizontal-input
   [field label type value errors]
@@ -130,7 +118,7 @@
        (let [type (if (= field :password) "password" "text")]
          (horizontal-input field label type (field values) (field errors))))))
 
-(defn add-debt-page
+(defn add-debt
   ([] (add-debt-page {} {}))
   ([debt errors]
      (layout

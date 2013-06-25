@@ -21,7 +21,7 @@
   :allowed-methods [:get :post]
   :available-media-types ["text/html" "application/json"]
   :handle-ok (fn [ctx]
-               (views/add-debt-page (:debt ctx {}) (:errors ctx {})))
+               (views/add-debt (:debt ctx {}) (:errors ctx {})))
   :post! (fn [{:keys [request representation]}]
            (let [db (:db request)
                  {:keys [from to amount]} (:params request)
@@ -41,3 +41,28 @@
                       {:location location}))
   :new? :success
   :respond-with-entity? true)
+
+(defresource user
+  :allowed-methods [:get]
+  :available-media-types ["text/html" "application/json"]
+  :exists? (fn [{:keys [request]}]
+             (let [user (get-in request [:params :user])
+                   db (:db request)
+                   debts (:debts @db)]
+               (when (contains? (debts/all-users debts) user)
+                 {:user user :debts debts})))
+  :handle-ok (fn [{:keys [user debts representation]}]
+               (let [debts (debts/simplify debts)
+                     owed (->> debts
+                               (filter (fn [[[_ owed] amount]]
+                                         (= owed user)))
+                               (map (fn [[[owes _] amount]] (vector owes amount))))
+                     owes (->> debts
+                               (filter (fn [[[owes _] amount]]
+                                         (= owes user)))
+                               (map (fn [[[_ owed] amount]] (vector owed amount))))]
+                 (views/user {:format (:media-type representation)
+                              :user user
+                              :debts debts
+                              :owed owed
+                              :owes owes}))))
