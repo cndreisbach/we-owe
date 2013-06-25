@@ -24,8 +24,8 @@
    (ANY "/debts/add" [] (restricted resources/add-debt))
    (POST "/debts/add.json" {body :body} (views/add-debt-json db (slurp body)))
 
-   (GET "/user/:user.json" [] (restricted resources/user))
-   (GET "/user/:user" [] (restricted resources/user))
+   (GET "/user/:user.json" [user] (restricted (resources/user user)))
+   (GET "/user/:user" [user] (restricted (resources/user user)))
 
    (GET "/login" [] (views/login-page))
    (POST "/login" [username password]

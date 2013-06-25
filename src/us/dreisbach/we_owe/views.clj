@@ -119,7 +119,7 @@
          (horizontal-input field label type (field values) (field errors))))))
 
 (defn add-debt
-  ([] (add-debt-page {} {}))
+  ([] (add-debt {} {}))
   ([debt errors]
      (layout
       [:h1 "Add a debt"]

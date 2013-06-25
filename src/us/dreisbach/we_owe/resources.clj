@@ -42,16 +42,15 @@
   :new? :success
   :respond-with-entity? true)
 
-(defresource user
+(defresource user [user]
   :allowed-methods [:get]
   :available-media-types ["text/html" "application/json"]
   :exists? (fn [{:keys [request]}]
-             (let [user (get-in request [:params :user])
-                   db (:db request)
+             (let [db (:db request)
                    debts (:debts @db)]
                (when (contains? (debts/all-users debts) user)
-                 {:user user :debts debts})))
-  :handle-ok (fn [{:keys [user debts representation]}]
+                 {:debts debts})))
+  :handle-ok (fn [{:keys [debts representation]}]
                (let [debts (debts/simplify debts)
                      owed (->> debts
                                (filter (fn [[[_ owed] amount]]
