@@ -21,7 +21,7 @@
   :allowed-methods [:get :post]
   :available-media-types ["text/html" "application/json"]
   :handle-ok (fn [ctx]
-               (views/add-debt (:debt ctx {}) (:errors ctx {})))
+               (views/add-debt-html (:debt ctx {}) (:errors ctx {})))
   :post! (fn [{:keys [request representation]}]
            (let [db (:db request)
                  {:keys [from to amount]} (:params request)

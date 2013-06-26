@@ -2,7 +2,6 @@
   (:require [clojure.pprint :refer [pprint]]
             [clojure.walk :refer [keywordize-keys]]
             [clojure.java.io :as io]            
-            [us.dreisbach.we-owe.debts :as debts :refer [valid-debt? all-users]]
             [ring.util.response :refer [redirect-after-post]]
             [hiccup.core :refer :all]
             [hiccup.page :refer :all]
@@ -12,7 +11,9 @@
             [cheshire.core :as json]
             [garden.core :refer [css]]
             [noir.response :as response]
-            [noir.session :as session]))
+            [noir.session :as session]
+            [us.dreisbach.we-owe.debts :as debts :refer [valid-debt? all-users]]
+            [us.dreisbach.we-owe.views.templates :refer [add-debt-form output-form]]))
 
 (defn- pstr
   [obj]
@@ -99,39 +100,10 @@
   [{:keys [debts owed owes user]}]
   {:debts owes :loans owed})
 
-(defn- horizontal-input
-  [field label type value errors]
-  (let [field (name field)
-        field-id (str field "-field")]
-    [:div {:class (if (seq errors) "control-group error" "control-group")}
-     [:label.control-label {:for field-id} label]
-     [:div.controls
-      [:input {:id field-id :type type :name field :value value}]
-      (if (seq errors)
-        (for [error errors]
-          [:span.help-block error]))]]))
-
-(defn- output-form
-  ([fields] (output-form fields {} {}))
-  ([fields values errors]
-     (for [[field label] fields]
-       (let [type (if (= field :password) "password" "text")]
-         (horizontal-input field label type (field values) (field errors))))))
-
-(defn add-debt
-  ([] (add-debt {} {}))
+(defn add-debt-html
+  ([] (add-debt-html {} {}))
   ([debt errors]
-     (layout
-      [:h1 "Add a debt"]
-      (form/form-to {:class "form-horizontal"} [:post "/debts/add"]
-                    (output-form [[:from "Lender"]
-                                  [:to "Borrower"]
-                                  [:amount "Amount"]]
-                                 debt
-                                 errors)
-                    [:div.control-group
-                     [:div.controls
-                      [:button.btn.btn-primary {:type "submit"} "Add a debt"]]]))))
+     (apply layout (add-debt-form :debt debt :errors errors))))
 
 (defn add-debt-json
   [db body]
@@ -160,8 +132,8 @@
       (form/form-to {:class "form-horizontal"} [:post "/login"]
                     (output-form [[:username "Name"]
                                   [:password "Password"]]
-                                 credentials
-                                 errors)
+                                 :values credentials
+                                 :errors errors)
                     [:div.control-group
                      [:div.controls
                       [:button.btn.btn-primary {:type "submit"} "Login"]]]))))
