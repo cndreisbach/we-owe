@@ -105,29 +105,17 @@
   [{:keys [debts owed owes user]}]
   {:debts owes :loans owed})
 
-(defn add-debt-html
-  ([] (add-debt-html {} {}))
-  ([debt errors]
-     (layout (add-debt-form :debt debt :errors errors))))
+(defmulti add-debt :format)
 
-(defn add-debt-json
-  [db body]
-  (let [debt (-> body
-                 json/parse-string
-                 keywordize-keys)
-        debt-validator (validation-set
-                        (presence-of :from)
-                        (presence-of :to)
-                        (presence-of :amount)
-                        (numericality-of :amount))]
-    (if (valid? debt-validator debt)
-      (do (swap! db update-in [:debts] conj debt)
-          (response/status
-           201
-           (response/json {:debt debt :ok true})))
-      (response/status
-       400
-       (response/json {:debt debt :errors (debt-validator debt) :ok false})))))
+(defmethod add-debt "text/html"
+  [{:keys [debt errors]}]
+  (layout (add-debt-form :debt debt :errors errors)))
+
+(defmethod add-debt "application/json"
+  [{:keys [debt errors] :or [debt {} errors {}]}]
+  (if (empty? errors)
+    {:ok true :debt debt}
+    {:ok false :debt debt :errors errors}))
 
 (defn login-page
   ([] (login-page {} {}))

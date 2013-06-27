@@ -20,8 +20,12 @@
 (defresource add-debt
   :allowed-methods [:get :post]
   :available-media-types ["text/html" "application/json"]
-  :handle-ok (fn [ctx]
-               (views/add-debt-html (:debt ctx {}) (:errors ctx {})))
+  :handle-ok (fn [{:keys [debt errors representation] :or [debt {} errors {}]}]
+               (views/add-debt {:format (:media-type representation)
+                                :debt debt
+                                :errors errors}))
+  :handle-created (fn [{:keys [debt location representation]}]
+                    {:ok true :debt debt :location location})
   :post! (fn [{:keys [request representation]}]
            (let [db (:db request)
                  {:keys [from to amount]} (:params request)
@@ -34,10 +38,13 @@
                (if (valid? debt-validator debt)
                  (let [debt (update-in debt [:amount] #(Float/parseFloat %))]
                    (swap! db update-in [:debts] conj debt)
-                   {:success true, :location "/debts"})
+                   {:success true, :debt debt, :location "/debts"})
                  {:success false, :debt debt, :errors (debt-validator debt)})))
-  :post-redirect? (fn [{:keys [success location]}]
-                    (if (and success location)
+  :post-redirect? (fn [{:keys [success location representation]}]
+                    (if (and success
+                             location
+                             (= (:media-type representation)
+                                "text/html"))
                       {:location location}))
   :new? :success
   :respond-with-entity? true)

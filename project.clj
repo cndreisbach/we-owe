@@ -14,9 +14,11 @@
                  [garden "0.1.0-beta5"]
                  [lib-noir "0.6.4"]
                  [liberator "0.9.0"]
+
+                 ;; ClojureScript deps
                  [prismatic/dommy "0.1.1"]
-                 ]
-  :cljsbuild {:crossovers [us.dreisbach.we-owe.views.templates],
+                 [cljs-ajax "0.1.3"]]
+  :cljsbuild {:crossovers [us.dreisbach.we-owe.views.templates]
               :builds [{:source-paths ["src-cljs"]
                         :compiler {:pretty-print true
                                    :output-to "resources/public/js/main.js"

@@ -22,7 +22,7 @@
    (GET "/debts" [] resources/debts)
 
    (ANY "/debts/add" [] (restricted resources/add-debt))
-   (POST "/debts/add.json" {body :body} (views/add-debt-json db (slurp body)))
+   (POST "/debts/add.json" [] resources/add-debt)
 
    (GET "/user/:user.json" [user] (restricted (resources/user user)))
    (GET "/user/:user" [user] (restricted (resources/user user)))
