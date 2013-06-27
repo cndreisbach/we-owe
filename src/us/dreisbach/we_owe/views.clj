@@ -23,6 +23,8 @@
   [user]
   [:a {:href (str "/user/" user)} user])
 
+(defn- current-user [] (session/get :user))
+
 (defn- login-nav
   []
   (let [user (session/get :user)]
@@ -53,7 +55,8 @@
               [:a.brand {:href "/debts"} "WeOwe"]
               (login-nav)]]
             content]
-           (include-js "/js/bootstrap.min.js")])))
+           (include-js "/js/bootstrap.min.js")
+           (include-js "/js/main.js")])))
 
 (defmulti debts :format)
 
@@ -68,8 +71,10 @@
    [:ul
     (for [[person amount] balances]
       [:li (user-link person) (str ": $" amount)])]
-   [:div
-    [:a.btn.btn-primary {:href "/debts/add"} [:i.icon-plus.icon-white] " Add a debt"]]))
+   (if (current-user)
+     [:div#add-debt-container
+      [:a#add-debt-btn.btn.btn-primary {:href "/debts/add"} [:i.icon-plus.icon-white] " Add a debt"]]
+     [:div#add-debt-container])))
 
 (defmethod debts "application/json"
   [{:keys [debts balances]}]
@@ -103,7 +108,7 @@
 (defn add-debt-html
   ([] (add-debt-html {} {}))
   ([debt errors]
-     (apply layout (add-debt-form :debt debt :errors errors))))
+     (layout (add-debt-form :debt debt :errors errors))))
 
 (defn add-debt-json
   [db body]
@@ -119,10 +124,10 @@
       (do (swap! db update-in [:debts] conj debt)
           (response/status
            201
-           (response/json {:debt debt :debts (:debts @db) :ok true})))
+           (response/json {:debt debt :ok true})))
       (response/status
        400
-       (response/json {:ok false :errors (debt-validator debt)})))))
+       (response/json {:debt debt :errors (debt-validator debt) :ok false})))))
 
 (defn login-page
   ([] (login-page {} {}))

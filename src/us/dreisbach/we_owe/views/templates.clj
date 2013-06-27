@@ -20,8 +20,9 @@
 
 (defn add-debt-form
   [& {:keys [debt errors] :or [debt {} errors {}]}]
-  [[:h1 "Add a debt"]
-   [:form.form-horizontal {:method "POST" :action "/debts/add"}
+  [:div
+   [:h1 "Add a debt"]
+   [:form#add-debt-form.form-horizontal {:method "POST" :action "/debts/add"}
     (output-form [[:from "Lender"]
                   [:to "Borrower"]
                   [:amount "Amount"]]
